@@ -9,7 +9,7 @@ model = pickle.load(open('rf.pkl', 'rb'))
 
 @app.route('/')
 def hello():
-    return 'Hello World'
+    return 'Hello World ok'
 
 # geting and sending response to dialogflow
 @app.route('/webhook', methods=['POST'])
@@ -36,7 +36,7 @@ def processRequest(req):
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
-    #log.write_log(sessionID, "User Says: "+user_says)
+    log.write_log(sessionID, "User Says: "+user_says)
     parameters = result.get("parameters")
     Petal_length=parameters.get("number")
     Petal_width = parameters.get("number1")
@@ -68,8 +68,8 @@ def processRequest(req):
         return {
             "fulfillmentText": fulfillmentText
         }
-    #else:
-    #    log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
+    else:
+        log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
     app.run()
