@@ -83,7 +83,10 @@ def processRequest(req,z,top_companies,top_company_changed):
     elif(intent=="NoNeedOfTopCompanies"):
         top_company_changed=True
         top_companies={}
-        z=False   
+        z=False
+        return {
+            "fulfillmentText":"ok as you say so"
+        },z,top_companies,top_company_changed
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
