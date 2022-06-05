@@ -64,14 +64,14 @@ def processRequest(req):
             flowr = 'Virginica'
        
         fulfillmentText= "The Iris type seems to be..  {} !".format(flowr)
+        z="bro why?"
         #log.write_log(sessionID, "Bot Says: "+fulfillmentText)
         return {
             "fulfillmentText": fulfillmentText
         }
-    elif intent=='SeeOurTopCompanyList':
-        return 
-        {
-            "fulfillmentText":" is something wrong? {}".format(companies)
+    elif (intent=='SeeOurTopCompanyList'):
+        return {
+            "fulfillmentText":"{}".format(z)
         }    
     else:
          return {
