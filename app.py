@@ -7,6 +7,7 @@ companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte',
 top_companies=set()
 top_company_changed=False
 app = Flask(__name__)
+
 model = pickle.load(open('rf.pkl', 'rb'))
 
 @app.route('/')
@@ -22,8 +23,8 @@ def webhook():
 
     #print("Request:")
     #print(json.dumps(req, indent=4))
-
-    res = processRequest(req)
+    global z
+    res,z= processRequest(req,z)
 
     res = json.dumps(res, indent=4)
     #print(res)
@@ -33,10 +34,9 @@ def webhook():
 
 
 # processing the request from dialogflow
-def processRequest(req):
+def processRequest(req,z):
     global top_company_changed
     global top_companies
-    global z
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
@@ -75,12 +75,12 @@ def processRequest(req):
     elif (intent=="SeeOurTopCompanyList"):
         if top_company_changed:
             return {
-            "fulfillmentText":"{}{}".format(top_companies,z)
-            }
+            "fulfillmentText":"{}+{}".format(top_companies,z)
+            },z
         else:
             return {
             "fulfillmentText":"{}".format(companies)
-            }
+            },z
     elif(intent=="NoNeedOfTopCompanies"):
         top_company_changed=True
         top_companies={}
@@ -88,7 +88,7 @@ def processRequest(req):
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
-        }
+        },z
         #log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
