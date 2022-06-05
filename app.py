@@ -71,7 +71,7 @@ def processRequest(req):
         }
     elif (intent=="SeeOurTopCompanyList"):
         return {
-            "fulfillmentText":"nope something iss wrong  {}".format(intent)
+            "fulfillmentText":"nope something iss wrong  {}".format(z)
         }
     else:
          return {
