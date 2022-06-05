@@ -68,7 +68,7 @@ def processRequest(req):
         return {
             "fulfillmentText": fulfillmentText
         }
-    elif intent=='See our top company list':
+    elif intent=='SeeOurTopCompanyList':
         return 
         {
             "fulfillmentText":"{}".format(companies)
