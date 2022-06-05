@@ -23,6 +23,7 @@ def webhook():
     req = request.get_json(silent=True, force=True)
     #print("Request:")
     #print(json.dumps(req, indent=4))
+
     res= processRequest(req)
     res = json.dumps(res, indent=4)
     #print(res)
@@ -92,6 +93,9 @@ def processRequest(req):
 
 if __name__ == '__main__':
     #z=True
+    top_companies=set()
+    top_company_changed=False
+    z=True
     app.run()
 #if __name__ == '__main__':
 #    port = int(os.getenv('PORT', 5000))
