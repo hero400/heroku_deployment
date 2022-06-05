@@ -6,7 +6,7 @@ from flask_cors import cross_origin
 companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
 top_companies=set()
 top_company_changed=False
-global z
+z=True
 app = Flask(__name__)
 
 model = pickle.load(open('rf.pkl', 'rb'))
@@ -24,8 +24,8 @@ def webhook():
 
     #print("Request:")
     #print(json.dumps(req, indent=4))
+    global z
     res,z= processRequest(req,z)
-
     res = json.dumps(res, indent=4)
     #print(res)
     r = make_response(res)
@@ -92,7 +92,7 @@ def processRequest(req,z):
         #log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
-    z=True
+    #z=True
     app.run()
 #if __name__ == '__main__':
 #    port = int(os.getenv('PORT', 5000))
