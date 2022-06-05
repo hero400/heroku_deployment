@@ -3,7 +3,7 @@ from flask import Flask, request, make_response
 import json
 import pickle
 from flask_cors import cross_origin
-
+companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
 app = Flask(__name__)
 model = pickle.load(open('rf.pkl', 'rb'))
 
@@ -68,6 +68,11 @@ def processRequest(req):
         return {
             "fulfillmentText": fulfillmentText
         }
+    elif intent=='See our top company list':
+        return 
+        {
+            "fulfillmentText":"{}".format(companies)
+        }    
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
