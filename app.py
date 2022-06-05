@@ -3,6 +3,8 @@ from flask import Flask, request, make_response
 import json
 import pickle
 from flask_cors import cross_origin
+import logging
+logging.basicConfig(level=logging.INFO)
 companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
 top_companies=set()
 top_company_changed=False
@@ -14,14 +16,14 @@ model = pickle.load(open('rf.pkl', 'rb'))
 @app.route('/')
 def hello():
     return 'Hello World okk boss'
-
 # geting and sending response to dialogflow
 @app.route('/webhook', methods=['GET','POST'])
 @cross_origin()
 def webhook():
-
     req = request.get_json(silent=True, force=True)
-
+    global top_company_changed
+    global top_companies
+    global z
     #print("Request:")
     #print(json.dumps(req, indent=4))
     res= processRequest(req)
@@ -34,9 +36,6 @@ def webhook():
 
 # processing the request from dialogflow
 def processRequest(req):
-    global top_company_changed
-    global top_companies
-    global z
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
