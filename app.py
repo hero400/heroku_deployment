@@ -4,6 +4,8 @@ import json
 import pickle
 from flask_cors import cross_origin
 companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
+top_companies=set()
+top_company_changed=False
 app = Flask(__name__)
 model = pickle.load(open('rf.pkl', 'rb'))
 
@@ -69,10 +71,17 @@ def processRequest(req):
             "fulfillmentText": fulfillmentText
         }
     elif (intent=="SeeOurTopCompanyList"):
-        z="bro why?"
-        return {
-            "fulfillmentText":"nope something iss {} wrong {}".format(z,companies)
-        }
+        if top_company_changed:
+            return {
+            "fulfillmentText":"{}".format(top_companies)
+            }
+        else:
+            return {
+            "fulfillmentText":"{}".format(companies)
+            }
+    elif(intent=="NoNeedOfTopCompanies"):
+        top_company_changed=True
+        top_companies={}   
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
