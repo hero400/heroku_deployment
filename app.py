@@ -6,6 +6,7 @@ from flask_cors import cross_origin
 companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
 top_companies=set()
 top_company_changed=False
+global z
 app = Flask(__name__)
 
 model = pickle.load(open('rf.pkl', 'rb'))
@@ -23,7 +24,6 @@ def webhook():
 
     #print("Request:")
     #print(json.dumps(req, indent=4))
-    global z
     res,z= processRequest(req,z)
 
     res = json.dumps(res, indent=4)
