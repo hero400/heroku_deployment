@@ -17,13 +17,10 @@ model = pickle.load(open('rf.pkl', 'rb'))
 def hello():
     return 'Hello World okk boss'
 # geting and sending response to dialogflow
-@app.route('/webhook', methods=['GET','POST'])
+@app.route('/webhook', methods=['POST'])                                                #GET
 @cross_origin()
 def webhook():
     req = request.get_json(silent=True, force=True)
-    global top_company_changed
-    global top_companies
-    global z
     #print("Request:")
     #print(json.dumps(req, indent=4))
     res= processRequest(req)
@@ -36,6 +33,9 @@ def webhook():
 
 # processing the request from dialogflow
 def processRequest(req):
+    global top_company_changed
+    global top_companies
+    global z
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
