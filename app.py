@@ -36,6 +36,7 @@ def webhook():
 def processRequest(req):
     global top_company_changed
     global top_companies
+    global z
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
@@ -74,7 +75,7 @@ def processRequest(req):
     elif (intent=="SeeOurTopCompanyList"):
         if top_company_changed:
             return {
-            "fulfillmentText":"{}".format(top_companies)
+            "fulfillmentText":"{}{}".format(top_companies,z)
             }
         else:
             return {
@@ -82,7 +83,8 @@ def processRequest(req):
             }
     elif(intent=="NoNeedOfTopCompanies"):
         top_company_changed=True
-        top_companies={}   
+        top_companies={}
+        z=False   
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
@@ -90,6 +92,7 @@ def processRequest(req):
         #log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
+    z=True
     app.run()
 #if __name__ == '__main__':
 #    port = int(os.getenv('PORT', 5000))
