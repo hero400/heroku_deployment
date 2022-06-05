@@ -69,7 +69,7 @@ def processRequest(req):
         return {
             "fulfillmentText": fulfillmentText
         }
-    elif (intent=='SeeOurTopCompanyList'):
+    elif (intent=='SeeOurTopompanyList'):
         return {
             "fulfillmentText":"{}".format(z)
         }    
