@@ -23,8 +23,10 @@ def webhook():
     req = request.get_json(silent=True, force=True)
     #print("Request:")
     #print(json.dumps(req, indent=4))
-
-    res= processRequest(req)
+    global top_company_changed
+    global top_companies
+    global z
+    res,z,top_companies,top_company_changed= processRequest(req,z,top_companies,top_company_changed)
     res = json.dumps(res, indent=4)
     #print(res)
     r = make_response(res)
@@ -33,10 +35,7 @@ def webhook():
 
 
 # processing the request from dialogflow
-def processRequest(req):
-    global top_company_changed
-    global top_companies
-    global z
+def processRequest(req,z,top_companies,top_company_changed):
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
@@ -76,11 +75,11 @@ def processRequest(req):
         if top_company_changed:
             return {
             "fulfillmentText":"{}+{}".format(top_companies,z)
-            }
+            },z,top_companies,top_company_changed
         else:
             return {
             "fulfillmentText":"{}+{}".format(companies,z)
-            }
+            },z,top_companies,top_company_changed
     elif(intent=="NoNeedOfTopCompanies"):
         top_company_changed=True
         top_companies={}
@@ -88,7 +87,7 @@ def processRequest(req):
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
-        }
+        },z,top_companies,top_company_changed
         #log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
