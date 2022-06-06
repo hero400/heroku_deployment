@@ -80,14 +80,14 @@ def processRequest(req,z,top_companies,top_company_changed):
     elif (intent=="SeeOurTopCompanyList"):
         if top_company_changed:
             return {
-            "fulfillmentText":"{}+{}".format(top_companies,z),
+            "fulfillmentText":"{}+{}".format(companies,z),
              "fulfillmentMessages": [
       {
         "platform": "ACTIONS_ON_GOOGLE",
         "simpleResponses": {
           "simpleResponses": [
             {
-              "textToSpeech": "Hi, how are you doing, I am a  bot, Do you want to proceed?"
+              "textToSpeech":"{}+{}".format(companies,z)
             }
           ]
         }
@@ -97,10 +97,7 @@ def processRequest(req,z,top_companies,top_company_changed):
         "suggestions": {
           "suggestions": [
             {
-              "title": "yes"
-            },
-            {
-              "title": "no"
+              "title": "ok"
             }
           ]
         }
@@ -108,7 +105,8 @@ def processRequest(req,z,top_companies,top_company_changed):
       {
         "text": {
           "text": [
-            "Hi, how are you doing, I am a  bot, Do you want to proceed?"
+          "{}+{}".format(companies,z)
+            
             ]
         }
       }
