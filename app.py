@@ -38,7 +38,7 @@ def webhook():
 
 
 # processing the request from dialogflow
-def processRequest():
+def processRequest(req):
     global top_company_changed
     global top_companies
     global z
