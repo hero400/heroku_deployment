@@ -7,7 +7,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
 top_companies=set()
-top_company_changed=True
+top_company_changed=False
 z=True
 app = Flask(__name__)
 
@@ -29,10 +29,7 @@ def webhook():
     req = request.get_json(silent=True, force=True)
     #print("Request:")
     #print(json.dumps(req, indent=4))
-    global top_company_changed
-    global top_companies
-    global z
-    res,z,top_companies,top_company_changed= processRequest(req,z,top_companies,top_company_changed)
+    res= processRequest(req)
     res = json.dumps(res, indent=4)
     #print(res)
     r = make_response(res)
@@ -41,7 +38,10 @@ def webhook():
 
 
 # processing the request from dialogflow
-def processRequest(req,z,top_companies,top_company_changed):
+def processRequest():
+    global top_company_changed
+    global top_companies
+    global z
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
@@ -110,29 +110,58 @@ def processRequest(req,z,top_companies,top_company_changed):
             ]
         }
       }
-    ]},z,top_companies,top_company_changed
+    ]}
         else:
             return {
-            "fulfillmentText":"{}+{}".format(companies,z)
-            },z,top_companies,top_company_changed
+            "fulfillmentText":"{}+{}".format(companies,z),
+             "fulfillmentMessages": [
+      {
+        "platform": "ACTIONS_ON_GOOGLE",
+        "simpleResponses": {
+          "simpleResponses": [
+            {
+              "textToSpeech":"{}+{}".format(companies,z)
+            }
+          ]
+        }
+      },
+      {
+      "platform": "ACTIONS_ON_GOOGLE",
+        "suggestions": {
+          "suggestions": [
+            {
+              "title": "ok"
+            }
+          ]
+        }
+      },
+      {
+        "text": {
+          "text": [
+          "{}+{}".format(companies,z)
+            
+            ]
+        }
+      }
+    ]}
     elif(intent=="NoNeedOfTopCompanies"):
         top_company_changed=True
         top_companies={}
         z=False
-        return {
-            "fulfillmentText":"ok as you say so"
-        },z,top_companies,top_company_changed
+    elif(intent=="TimeToLeave"):
+        z=True
+        top_company_changed=False    
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
-        },z,top_companies,top_company_changed
+        }
         #log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
     #z=True
-    top_companies=set()
-    top_company_changed=False
-    z=True
+    # top_companies=set()
+    # top_company_changed=False
+    # z=True
     app.run()
 #if __name__ == '__main__':
 #    port = int(os.getenv('PORT', 5000))
