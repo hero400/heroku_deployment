@@ -80,14 +80,14 @@ def processRequest(req):
     elif (intent=="SeeOurTopCompanyList"):
         if top_company_changed:
             return {
-            "fulfillmentText":"{}+{}".format(companies,z),
+            "fulfillmentText":"{}+{}".format(top_companies,z),
              "fulfillmentMessages": [
       {
         "platform": "ACTIONS_ON_GOOGLE",
         "simpleResponses": {
           "simpleResponses": [
             {
-              "textToSpeech":"{}+{}".format(companies,z)
+              "textToSpeech":"{}+{}".format(top_companies,z)
             }
           ]
         }
@@ -105,7 +105,7 @@ def processRequest(req):
       {
         "text": {
           "text": [
-          "{}+{}".format(companies,z)
+          "{}+{}".format(top_companies,z)
             
             ]
         }
@@ -150,7 +150,11 @@ def processRequest(req):
         z=False
     elif(intent=="TimeToLeave"):
         z=True
-        top_company_changed=False    
+        top_company_changed=False   
+        return 
+        {
+        "fulfillmentText":"bye"
+        } 
     else:
          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
