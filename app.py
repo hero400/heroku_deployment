@@ -15,7 +15,13 @@ model = pickle.load(open('rf.pkl', 'rb'))
 
 @app.route('/')
 def hello():
-    return 'Hello World okk boss'
+    global z
+    if z:
+        z=False
+        return 'Hello World okk boss{}'.format(z)
+    else:
+        z=True
+        return "ok{}".format(z)    
 # geting and sending response to dialogflow
 @app.route('/webhook', methods=['POST'])                                                #GET
 @cross_origin()
@@ -74,8 +80,39 @@ def processRequest(req,z,top_companies,top_company_changed):
     elif (intent=="SeeOurTopCompanyList"):
         if top_company_changed:
             return {
-            "fulfillmentText":"{}+{}".format(top_companies,z)
-            },z,top_companies,top_company_changed
+            "fulfillmentText":"{}+{}".format(top_companies,z),
+             "fulfillmentMessages": [
+      {
+        "platform": "ACTIONS_ON_GOOGLE",
+        "simpleResponses": {
+          "simpleResponses": [
+            {
+              "textToSpeech": "Hi, how are you doing, I am a  bot, Do you want to proceed?"
+            }
+          ]
+        }
+      },
+      {
+      "platform": "ACTIONS_ON_GOOGLE",
+        "suggestions": {
+          "suggestions": [
+            {
+              "title": "yes"
+            },
+            {
+              "title": "no"
+            }
+          ]
+        }
+      },
+      {
+        "text": {
+          "text": [
+            "Hi, how are you doing, I am a  bot, Do you want to proceed?"
+            ]
+        }
+      }
+    ]},z,top_companies,top_company_changed
         else:
             return {
             "fulfillmentText":"{}+{}".format(companies,z)
