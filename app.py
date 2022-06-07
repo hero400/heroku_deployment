@@ -174,7 +174,7 @@ def processRequest(req):
         {
         "fulfillmentText":"bye"
         } 
-    elif (intent=="AddOwnCompanies")
+    elif (intent=="AddOwnCompanies"):
         upload_file()    
     else:
          return {
