@@ -1,6 +1,10 @@
+from flask import Flask, render_template, request
+from werkzeug.utils import secure_filename
+from werkzeug.datastructures import  FileStorage
 import numpy as np
 from flask import Flask, request, make_response
 import json
+import pandas as pd
 import pickle
 from flask_cors import cross_origin
 import logging
@@ -12,16 +16,31 @@ z=True
 app = Flask(__name__)
 
 model = pickle.load(open('rf.pkl', 'rb'))
-
+@app.route('/upload')
+def upload_file():
+   return render_template('upload.html')
+df=pd.DataFrame()    
+@app.route('/uploader', methods = ['GET', 'POST'])
+def upload_files():
+    global df
+    if request.method == 'POST':
+      f = request.files['file']
+      f.save(secure_filename(f.filename))
+      df=pd.read_csv(f.filename)  
+      return 'file uploaded successfully'
+            
 @app.route('/')
 def hello():
     global z
     if z:
         z=False
-        return 'Hello World okk boss{}'.format(z)
+        return "ok"+str(df.shape)
+        #return df.shape()    
     else:
         z=True
-        return "ok{}".format(z)    
+        return "ok{}".format(z)
+
+
 # geting and sending response to dialogflow
 @app.route('/webhook', methods=['POST'])                                                #GET
 @cross_origin()
@@ -162,11 +181,11 @@ def processRequest(req):
         #log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
-    #z=True
-    # top_companies=set()
-    # top_company_changed=False
+    z=True
+    top_companies=set()
+    top_company_changed=False
     # z=True
-    app.run()
+    app.run(debug=True)
 #if __name__ == '__main__':
 #    port = int(os.getenv('PORT', 5000))
 #    print("Starting app on port %d" % port)
