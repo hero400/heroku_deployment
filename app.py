@@ -38,7 +38,7 @@ def hello():
         #return df.shape()    
     else:
         z=True
-        return "ok{}".format(z)
+        return "sure bro{}".format(z)
 
 
 # geting and sending response to dialogflow
