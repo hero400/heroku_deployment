@@ -16,11 +16,10 @@ z=True
 app = Flask(__name__)
 
 model = pickle.load(open('rf.pkl', 'rb'))
-@app.route('/')
+@app.route('/', methods = ['GET', 'POST'])
 def upload_file():
    return render_template('upload.html')
 df=pd.DataFrame()    
-@app.route('/', methods = ['GET', 'POST'])
 def upload_files():
     global df
     if request.method == 'POST':
