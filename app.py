@@ -16,11 +16,11 @@ z=True
 app = Flask(__name__)
 
 model = pickle.load(open('rf.pkl', 'rb'))
-@app.route('/upload')
+@app.route('/')
 def upload_file():
    return render_template('upload.html')
 df=pd.DataFrame()    
-@app.route('/uploader', methods = ['GET', 'POST'])
+@app.route('/', methods = ['GET', 'POST'])
 def upload_files():
     global df
     if request.method == 'POST':
@@ -29,16 +29,16 @@ def upload_files():
       df=pd.read_csv(f.filename)  
       return 'file uploaded successfully'
             
-@app.route('/')
-def hello():
-    global z
-    if z:
-        z=False
-        return "ok"+str(df.shape)
-        #return df.shape()    
-    else:
-        z=True
-        return "sure bro{}".format(z)
+# @app.route('/')
+# def hello():
+#     global z
+#     if z:
+#         z=False
+#         return "ok"+str(df.shape)
+#         #return df.shape()    
+#     else:
+#         z=True
+#         return "sure bro{}".format(z)
 
 
 # geting and sending response to dialogflow
