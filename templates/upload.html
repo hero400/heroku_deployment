@@ -1,0 +1,51 @@
+<!-- <html>
+   <body>
+      <form  method = "POST" 
+         enctype = "multipart/form-data">
+         <input type = "file" name = "file" />
+         <input type = "submit"/>
+      </form>   
+     <script type="text/javascript">
+    (function(d, m){
+        var kommunicateSettings = 
+            {"appId":"3660bb56cadbb0a4cbd312baa880e45a6","popupWidget":true,"automaticChatOpenOnNavigation":true};
+        var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
+        s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
+        var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
+        window.kommunicate = m; m._globals = kommunicateSettings;
+    })(document, window.kommunicate || {});
+/* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
+</script> 
+   </body>
+</html> -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask App - Output data on same page after form submit</title>
+</head>
+<body>
+
+    <form action=https://check-deployment.herokuapp.com method=post enctype=multipart/form-data>
+    <p><input type="file" name="file" >
+    <input type="submit" value="Upload" id="search_form_input">
+    </form>
+
+
+    <!-- <div id="morse" class="info">nothing received yet</div>
+ -->    <h3>{{ result }}</h3>
+    <!-- <h3>{{ file_path }}</h3>
+ -->     <script type="text/javascript">
+    (function(d, m){
+        var kommunicateSettings = 
+            {"appId":"3660bb56cadbb0a4cbd312baa880e45a6","popupWidget":true,"automaticChatOpenOnNavigation":true};
+        var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
+        s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
+        var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
+        window.kommunicate = m; m._globals = kommunicateSettings;
+    })(document, window.kommunicate || {});
+/* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
+</script> 
+
+<!-- this is where is need my data -->
+
+</body>
