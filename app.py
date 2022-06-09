@@ -25,6 +25,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
 top_companies=set()
+top_company_changed=False
 # session['top_company_changed']=False
 model = pickle.load(open('rf.pkl', 'rb'))
 z=True
