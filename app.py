@@ -14,6 +14,7 @@ import os
 import boto3,botocore
 #import redis
 app = Flask(__name__)
+
 # app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 # app.config['SESSION_TYPE'] = 'redis'
 # app.config['SESSION_REDIS'] = redis.from_url('redis://127.0.0.1:6379')
@@ -66,6 +67,7 @@ df=pd.DataFrame()
 @app.route("/")
 def account():
     return render_template('upload.html')
+@cross_origin()    
 @app.route('/sign-s3/')
 def sign_s3():
   # Load necessary information into the application
