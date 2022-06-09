@@ -8,26 +8,66 @@ import pandas as pd
 import pickle
 from flask_cors import cross_origin
 import logging
+import os
+from flask import session, redirect, url_for, flash, g
+from flask_session import Session
+import os
+import redis
+app = Flask(__name__)
+# app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+# app.config['SESSION_TYPE'] = 'redis'
+# app.config['SESSION_REDIS'] = redis.from_url('redis://127.0.0.1:6379')
+# # Configure session to use filesystem
+# app.config["SESSION_PERMANENT"] = False
+# app.config["SESSION_TYPE"] = "filesystem"
+# app.config['top_company_changed']=False
+#Session(app)
 logging.basicConfig(level=logging.INFO)
 companies={'twitter','infosys limited','amex','citi','goldman sachs','deloitte','jpmorgan','capgemini','mu sigma','fractal','tiger analytics','exl','walmart','microsoft','google','amazon','ibm','pwc','infosys','tata consultancy services','hsbc','standard chartered','accenture','ey','kpmg'}
 top_companies=set()
-top_company_changed=False
-z=True
-app = Flask(__name__)
-
+# session['top_company_changed']=False
 model = pickle.load(open('rf.pkl', 'rb'))
-@app.route('/', methods = ['GET', 'POST'])
+z=True
+df=pd.DataFrame() 
+@app.route('/')
 def upload_file():
-   return render_template('upload.html')
-df=pd.DataFrame()    
-def upload_files():
+  # global z
+  # z=False
+  # return "ok boss"+str(z)
+  return render_template('upload.html')
+# @app.route('/sog')
+# def fog():
+#   global z
+#   z=True
+#   return str(z)
+# @app.route('/dog')
+# def cat():
+#   return str(z)
+# @app.route('/', methods = ['GET', 'POST'])
+# def upload_files():
+#     global df
+#     if request.method == 'POST':
+#       f = request.files['file']
+#       f.save(secure_filename(f.filename))
+#       df=pd.read_csv(f.filename)
+
+#       return 'file uploaded successfully'
+@app.route("/", methods=['GET', 'POST'])
+def streambyte():
     global df
-    if request.method == 'POST':
-      f = request.files['file']
-      f.save(secure_filename(f.filename))
-      df=pd.read_csv(f.filename)  
-      return 'file uploaded successfully'
-            
+    global top_companies
+    global top_company_changed
+    global z
+    # your file processing code is here...
+    f = request.files['file']
+    your_script_result = 'File Uploaded!'
+    df=pd.read_csv(f.filename)
+    top_company_changed=True
+    top_companies=df['0']
+    z=False
+    print(top_companies)
+    # your file processing code is here...
+    return render_template('upload.html', file_path = f, result = your_script_result)            
 # @app.route('/')
 # def hello():
 #     global z
@@ -41,9 +81,12 @@ def upload_files():
 
 
 # geting and sending response to dialogflow
-@app.route('/webhook', methods=['POST'])                                                #GET
+@app.route('/webhook', methods=['GET','POST'])                                                #GET
 @cross_origin()
 def webhook():
+    global top_company_changed
+    global top_companies
+    global z
     req = request.get_json(silent=True, force=True)
     #print("Request:")
     #print(json.dumps(req, indent=4))
@@ -164,7 +207,7 @@ def processRequest(req):
     ]}
     elif(intent=="NoNeedOfTopCompanies"):
         top_company_changed=True
-        top_companies={}
+        #top_companies={}
         z=False
     elif(intent=="TimeToLeave"):
         z=True
@@ -174,17 +217,20 @@ def processRequest(req):
         "fulfillmentText":"bye"
         } 
     elif (intent=="AddOwnCompanies"):
-        upload_file()    
+          z=False
+          # sesssion['top_company_changed']=True
+          # top_companies=df['0'].values()
+ 
     else:
-         return {
+          return {
             "fulfillmentText":"nope something is wrong  {}".format(intent)
         }
         #log.write_log(sessionID, "Bot Says: " + result.fulfillmentText)
 
 if __name__ == '__main__':
-    z=True
-    top_companies=set()
-    top_company_changed=False
+    # z=True
+    # top_companies=set()
+    # top_company_changed=False
     # z=True
     app.run(debug=True)
 #if __name__ == '__main__':
