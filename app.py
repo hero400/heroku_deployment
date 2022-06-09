@@ -11,7 +11,7 @@ import logging
 import os
 #from flask import session, redirect, url_for, flash, g
 #from flask_session import Session
-import os
+import boto3,botocore
 #import redis
 app = Flask(__name__)
 # app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
@@ -30,6 +30,16 @@ top_company_changed=False
 model = pickle.load(open('rf.pkl', 'rb'))
 z=True
 df=pd.DataFrame() 
+app.config['S3_BUCKET'] = "storage-bucket-for-resume"
+app.config['S3_KEY'] = "AKIATY6DFONKGVKGUJS2"
+app.config['S3_SECRET'] = "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"
+app.config['S3_LOCATION'] = 'http://{}.s3.amazonaws.com/'.format(app.config['S3_BUCKET'])
+print(app.config['S3_BUCKET'])
+s3 = boto3.client(
+   "s3",
+   aws_access_key_id=app.config['S3_KEY'],
+   aws_secret_access_key=app.config['S3_SECRET']
+)
 @app.route('/')
 def upload_file():
   # global z
@@ -61,6 +71,13 @@ def streambyte():
     global z
     # your file processing code is here...
     f = request.files['file']
+    filename = secure_filename(f.filename)
+    client = boto3.client('s3',
+    aws_access_key_id=app.config['S3_KEY'],
+    aws_secret_access_key=app.config['S3_SECRET'])
+    client.put_object(Body=f,
+                      Bucket=app.config['S3_BUCKET'],
+                      Key=filename)
     your_script_result = 'File Uploaded!'
     df=pd.read_csv(f.filename)
     top_company_changed=True
@@ -68,7 +85,10 @@ def streambyte():
     z=False
     print(top_companies)
     # your file processing code is here...
-    return render_template('upload.html', file_path = f, result = your_script_result)            
+    return render_template('upload.html', file_path = f, result = your_script_result)        
+@app.route('/dog')
+def cat():
+  return str(top_company_changed)+str(top_companies)        
 # @app.route('/')
 # def hello():
 #     global z
