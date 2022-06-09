@@ -30,22 +30,22 @@ top_company_changed=False
 model = pickle.load(open('rf.pkl', 'rb'))
 z=True
 df=pd.DataFrame() 
-app.config['S3_BUCKET'] = "storage-bucket-for-resume"
-app.config['S3_KEY'] = "AKIATY6DFONKGVKGUJS2"
-app.config['S3_SECRET'] = "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"
-app.config['S3_LOCATION'] = 'http://{}.s3.amazonaws.com/'.format(app.config['S3_BUCKET'])
-print(app.config['S3_BUCKET'])
-s3 = boto3.client(
-   "s3",
-   aws_access_key_id=app.config['S3_KEY'],
-   aws_secret_access_key=app.config['S3_SECRET']
-)
-@app.route('/')
-def upload_file():
-  # global z
-  # z=False
-  # return "ok boss"+str(z)
-  return render_template('upload.html')
+# app.config['S3_BUCKET'] = "storage-bucket-for-resume"
+# app.config['S3_KEY'] = "AKIATY6DFONKGVKGUJS2"
+# app.config['S3_SECRET'] = "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"
+# app.config['S3_LOCATION'] = 'http://{}.s3.amazonaws.com/'.format(app.config['S3_BUCKET'])
+#print(app.config['S3_BUCKET'])
+# s3 = boto3.client(
+#    "s3",
+#    aws_access_key_id=app.config['S3_KEY'],
+#    aws_secret_access_key=app.config['S3_SECRET']
+# )
+# @app.route('/')
+# def upload_file():
+#   # global z
+#   # z=False
+#   # return "ok boss"+str(z)
+#   return render_template('upload.html')
 # @app.route('/sog')
 # def fog():
 #   global z
@@ -63,29 +63,73 @@ def upload_file():
 #       df=pd.read_csv(f.filename)
 
 #       return 'file uploaded successfully'
-@app.route("/", methods=['GET', 'POST'])
-def streambyte():
-    global df
-    global top_companies
-    global top_company_changed
-    global z
-    # your file processing code is here...
-    f = request.files['file']
-    filename = secure_filename(f.filename)
-    client = boto3.client('s3',
-    aws_access_key_id=app.config['S3_KEY'],
-    aws_secret_access_key=app.config['S3_SECRET'])
-    client.put_object(Body=f,
-                      Bucket=app.config['S3_BUCKET'],
-                      Key=filename)
-    your_script_result = 'File Uploaded!'
-    df=pd.read_csv(f.filename)
-    top_company_changed=True
-    top_companies=df['0']
-    z=False
-    print(top_companies)
-    # your file processing code is here...
-    return render_template('upload.html', file_path = f, result = your_script_result)        
+@app.route("/")
+def account():
+    return render_template('upload.html')
+@app.route('/sign-s3/')
+def sign_s3():
+  # Load necessary information into the application
+  S3_BUCKET = os.environ.get('S3_BUCKET')
+
+  # Load required data from the request
+  file_name = request.args.get('file-name')
+  file_type = request.args.get('file-type')
+
+  # Initialise the S3 client
+  s3 = boto3.client('s3')
+
+  # Generate and return the presigned URL
+  presigned_post = s3.generate_presigned_post(
+    Bucket = S3_BUCKET,
+    Key = file_name,
+    Fields = {"acl": "public-read", "Content-Type": file_type},
+    Conditions = [
+      {"acl": "public-read"},
+      {"Content-Type": file_type}
+    ],
+    ExpiresIn = 3600
+  )
+  #print(presigned_post+"https://%s.s3.amazonaws.com/%s" % (S3_BUCKET, file_name))
+  #print("https://%s.s3.amazonaws.com/%s" % (S3_BUCKET, file_name))
+  d=json.dumps({
+    'data': presigned_post,
+    'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
+  })
+  #print(d)
+  return json.dumps({
+    'data': presigned_post,
+    'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
+  })
+@app.route("/submit_form/", methods = ["POST"])
+def submit_form():
+
+  username = request.form["username"]
+  full_name = request.form["full-name"]
+  avatar_url = request.form["avatar-url"]
+  return "dog"
+# @app.route("/", methods=['GET', 'POST'])
+# def streambyte():
+#     global df
+#     global top_companies
+#     global top_company_changed
+#     global z
+#     # your file processing code is here...
+#     f = request.files['file']
+#     filename = secure_filename(f.filename)
+#     client = boto3.client('s3',
+#     aws_access_key_id=app.config['S3_KEY'],
+#     aws_secret_access_key=app.config['S3_SECRET'])
+#     client.put_object(Body=f,
+#                       Bucket=app.config['S3_BUCKET'],
+#                       Key=filename)
+#     your_script_result = 'File Uploaded!'
+#     df=pd.read_csv(f.filename)
+#     top_company_changed=True
+#     top_companies=df['0']
+#     z=False
+#     print(top_companies)
+#     # your file processing code is here...
+#     return render_template('upload.html', file_path = f, result = your_script_result)        
 @app.route('/dog')
 def cat():
   return str(top_company_changed)+str(top_companies)        
@@ -253,7 +297,9 @@ if __name__ == '__main__':
     # top_companies=set()
     # top_company_changed=False
     # z=True
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port = port,debug=True)
+    #app.run(debug=True)
 #if __name__ == '__main__':
 #    port = int(os.getenv('PORT', 5000))
 #    print("Starting app on port %d" % port)
