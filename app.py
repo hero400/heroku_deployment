@@ -103,7 +103,7 @@ def list():
     global top_companies
     contents = show_image(os.environ.get('S3_BUCKET'))
     if len(contents)>0:
-      f =requests.get(contents[1], allow_redirects=True)
+      f =requests.get(contents[0], allow_redirects=True)
       temp=f.text.split("\n")
       for x in temp:
           if "," in x:
