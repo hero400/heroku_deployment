@@ -9,6 +9,7 @@ import pickle
 from flask_cors import cross_origin
 import logging
 import os
+import requests
 #from flask import session, redirect, url_for, flash, g
 #from flask_session import Session
 import boto3,botocore
@@ -101,6 +102,33 @@ def sign_s3():
     'data': presigned_post,
     'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
   })
+@app.route("/pics")
+def list():
+    global top_companies
+    contents = show_image(os.environ.get('S3_BUCKET'))
+    f =requests.get(contents[1], allow_redirects=True)
+    temp=f.text.split("\n")
+    for x in temp:
+        if "," in x:
+            top_companies.add(x.split(",")[1])
+    # import json
+    # data = json.loads(f.text)
+    return "ok"
+def show_image(bucket):
+    s3_client = boto3.client('s3',region_name='ap-south-1')
+    public_urls = []
+    try:
+        for item in s3_client.list_objects(Bucket=bucket)['Contents']:
+            presigned_url = s3_client.generate_presigned_url('get_object', Params = {'Bucket': bucket, 'Key': item['Key']}, ExpiresIn = 100)
+            public_urls.append(presigned_url)
+    except Exception as e:
+        pass
+    # print("[INFO] : The contents inside show_image = ", public_urls)
+    return public_urls
+@app.route("/pip")
+def pipp():
+  return str(top_companies)
+
 @app.route("/submit_form/", methods = ["POST"])
 def submit_form():
 
@@ -284,6 +312,7 @@ def processRequest(req):
         } 
     elif (intent=="AddOwnCompanies"):
           z=False
+
           # sesssion['top_company_changed']=True
           # top_companies=df['0'].values()
  
