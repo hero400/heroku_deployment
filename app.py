@@ -315,7 +315,8 @@ def processRequest(req):
         } 
     elif (intent=="AddOwnCompanies"):
           z=False
-          return redirect(url_for('account'))
+          account()
+          #return redirect(url_for('account'))
           # sesssion['top_company_changed']=True
           # top_companies=df['0'].values()
  
