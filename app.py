@@ -10,10 +10,7 @@ from flask_cors import cross_origin
 import logging
 import os
 import requests
-#from flask import session, redirect, url_for, flash, g
-#from flask_session import Session
 import boto3,botocore
-#import redis
 app = Flask(__name__)
 # app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 # app.config['SESSION_TYPE'] = 'redis'
@@ -30,7 +27,6 @@ top_company_changed=False
 # session['top_company_changed']=False
 model = pickle.load(open('rf.pkl', 'rb'))
 z=True
-df=pd.DataFrame() 
 # app.config['S3_BUCKET'] = "storage-bucket-for-resume"
 # app.config['S3_KEY'] = "AKIATY6DFONKGVKGUJS2"
 # app.config['S3_SECRET'] = "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"
@@ -65,9 +61,6 @@ df=pd.DataFrame()
 
 #       return 'file uploaded successfully'
 @app.route("/")
-def hello():
-  return render_template("collection.html")
-@app.route("/upload")
 def account():
     return render_template('upload.html')
 @cross_origin()    
@@ -104,40 +97,43 @@ def sign_s3():
     'data': presigned_post,
     'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
   })
-@app.route("/pics")
+
+@app.route("/pics")       
 def list():
     global top_companies
     contents = show_image(os.environ.get('S3_BUCKET'))
-    f =requests.get(contents[1], allow_redirects=True)
-    temp=f.text.split("\n")
-    for x in temp:
-        if "," in x:
-            top_companies.add(x.split(",")[1])
+    if len(contents)>0:
+      f =requests.get(contents[1], allow_redirects=True)
+      temp=f.text.split("\n")
+      for x in temp:
+          if "," in x:
+              top_companies.add(x.split(",")[1])
     # import json
     # data = json.loads(f.text)
-    return "ok"
+    return render_template('upload.html',result = "File Submitted")   
 def show_image(bucket):
     s3_client = boto3.client('s3',region_name='ap-south-1')
     public_urls = []
     try:
         for item in s3_client.list_objects(Bucket=bucket)['Contents']:
             presigned_url = s3_client.generate_presigned_url('get_object', Params = {'Bucket': bucket, 'Key': item['Key']}, ExpiresIn = 100)
+            print(presigned_url)
             public_urls.append(presigned_url)
     except Exception as e:
         pass
     # print("[INFO] : The contents inside show_image = ", public_urls)
     return public_urls
-@app.route("/pip")
-def pipp():
+@app.route("/gif")
+def giff():
   return str(top_companies)
 
-@app.route("/submit_form/", methods = ["POST"])
-def submit_form():
+# @app.route("/submit_form/", methods = ["POST"])
+# def submit_form():
 
-  username = request.form["username"]
-  full_name = request.form["full-name"]
-  avatar_url = request.form["avatar-url"]
-  return "dog"
+#   username = request.form["username"]
+#   full_name = request.form["full-name"]
+#   avatar_url = request.form["avatar-url"]
+#   return "dog"
 # @app.route("/", methods=['GET', 'POST'])
 # def streambyte():
 #     global df
