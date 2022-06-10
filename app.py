@@ -101,6 +101,7 @@ def sign_s3():
 @app.route("/pics")       
 def list():
     global top_companies
+    global top_company_changed
     contents = show_image(os.environ.get('S3_BUCKET'))
     if len(contents)>0:
       f =requests.get(contents[0], allow_redirects=True)
@@ -110,6 +111,7 @@ def list():
               top_companies.add(x.split(",")[1])
     # import json
     # data = json.loads(f.text)
+    top_company_changed=True
     return render_template('upload.html',result = "File Submitted")   
 def show_image(bucket):
     s3_client = boto3.client('s3',region_name='ap-south-1')
