@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import  FileStorage
 import numpy as np
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response,redirect,url_for
 import json
 import pandas as pd
 import pickle
@@ -15,7 +15,6 @@ import requests
 import boto3,botocore
 #import redis
 app = Flask(__name__)
-
 # app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 # app.config['SESSION_TYPE'] = 'redis'
 # app.config['SESSION_REDIS'] = redis.from_url('redis://127.0.0.1:6379')
@@ -66,6 +65,9 @@ df=pd.DataFrame()
 
 #       return 'file uploaded successfully'
 @app.route("/")
+def hello():
+  return render_template("collection.html")
+@app.route("/upload")
 def account():
     return render_template('upload.html')
 @cross_origin()    
@@ -300,6 +302,7 @@ def processRequest(req):
       }
     ]}
     elif(intent=="NoNeedOfTopCompanies"):
+        print("cat")
         top_company_changed=True
         #top_companies={}
         z=False
@@ -312,7 +315,7 @@ def processRequest(req):
         } 
     elif (intent=="AddOwnCompanies"):
           z=False
-
+          return redirect(url_for('account'))
           # sesssion['top_company_changed']=True
           # top_companies=df['0'].values()
  
