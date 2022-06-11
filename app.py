@@ -299,7 +299,6 @@ def processRequest(req):
     elif(intent=="NoNeedOfTopCompanies"):
         print("cat")
         top_company_changed=True
-        watch()
         #top_companies={}
         z=False
     elif(intent=="TimeToLeave"):
@@ -311,7 +310,6 @@ def processRequest(req):
         } 
     elif (intent=="AddOwnCompanies"):
           z=False
-          account()
           #return redirect(url_for('account'))
           # sesssion['top_company_changed']=True
           # top_companies=df['0'].values()
