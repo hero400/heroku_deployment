@@ -10,7 +10,10 @@ from flask_cors import cross_origin
 import logging
 import os
 import requests
+import docx2txt
 import boto3,botocore
+import io
+import docx
 app = Flask(__name__)
 # app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 # app.config['SESSION_TYPE'] = 'redis'
@@ -94,11 +97,12 @@ def sign_s3():
     'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
   })
 
-@app.route("/pics")       
-def list():
+@app.route("/companies")       
+def company_list():
     global top_companies
     global top_company_changed
     contents = show_image(os.environ.get('S3_BUCKET'))
+    print(len(contents))
     if len(contents)>0:
       f =requests.get(contents[0], allow_redirects=True)
       temp=f.text.split("\n")
@@ -114,14 +118,62 @@ def show_image(bucket):
     public_urls = []
     try:
         for item in s3_client.list_objects(Bucket=bucket)['Contents']:
-            presigned_url = s3_client.generate_presigned_url('get_object', Params = {'Bucket': bucket, 'Key': item['Key']}, ExpiresIn = 100)
-            public_urls.append(presigned_url)    
+            text=item['Key']
+            index=text.find(".")
+            #print(text[index+1:])
+            if text[index+1:]=="csv":
+                presigned_url = s3_client.generate_presigned_url('get_object', Params = {'Bucket': bucket, 'Key': item['Key']}, ExpiresIn = 100)
+                public_urls.append(presigned_url) 
+
     except Exception as e:
-        pass 
-    for item in s3_client.list_objects(Bucket=bucket)['Contents']:
-        print(item['Key'])    
+        print("expection:"+str(e))
+    # for item in s3_client.list_objects(Bucket=bucket)['Contents']:
+    #     print(item['Key'])    
     # print("[INFO] : The contents inside show_image = ", public_urls)
     return public_urls
+@app.route("/resumes")
+def resume_list():
+     contents = show_image2(os.environ.get('S3_BUCKET'))
+       #print(f.text)
+       #print(resume_text)
+     return render_template("upload.html",result2=contents)  
+def show_image2(bucket):
+    # fs = obj.get()['Body'].read()
+    # pdfFile = PdfFileReader(BytesIO(fs))
+    s3_client = boto3.client('s3',region_name='ap-south-1')
+    resumes= []
+    count=0
+    try:
+        for item in s3_client.list_objects(Bucket=bucket)['Contents']:
+            s3 = boto3.resource('s3')
+            text=item['Key']
+            index=text.find(".")
+            if text[index+1:]=="docx" or text[index+1:]=="doc":
+              count+=1
+              obj = s3.Object(bucket,item['Key'])
+              bytes_data= obj.get()['Body'].read()
+              file_object=io.BytesIO(bytes_data)
+              document=doc_to_text(file_object)
+              #print(document)
+              document+="**********************"
+              resumes.append(document)
+              # document = docx.Document(docx=file_object)
+              # doc=""
+              # for p in document.paragraphs:
+              #     doc+=p.text
+              #     print(p.text)
+              # doc+="*************************************\n"  
+    except Exception as e:
+        print("expection:"+str(e))
+    # for item in s3_client.list_objects(Bucket=bucket)['Contents']:
+    #     print(item['Key'])    
+    # print("[INFO] : The contents inside show_image = ", public_urls)
+    print(count)
+    return resumes
+def doc_to_text(path):
+    text=docx2txt.process(path)
+    text2=[line.replace('\t'," ") for line in text.split('\n') if line]
+    return " ".join(text)           
 @app.route("/gif")
 def giff():
   return str(top_companies)
