@@ -60,6 +60,9 @@ z=True
 #       df=pd.read_csv(f.filename)
 
 #       return 'file uploaded successfully'
+def watch():
+  print("ok bro")
+  return url_for('giff')
 @app.route("/")
 def account():
     return render_template('upload.html')
@@ -86,13 +89,6 @@ def sign_s3():
     ],
     ExpiresIn = 3600
   )
-  #print(presigned_post+"https://%s.s3.amazonaws.com/%s" % (S3_BUCKET, file_name))
-  #print("https://%s.s3.amazonaws.com/%s" % (S3_BUCKET, file_name))
-  d=json.dumps({
-    'data': presigned_post,
-    'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
-  })
-  #print(d)
   return json.dumps({
     'data': presigned_post,
     'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
@@ -112,17 +108,18 @@ def list():
     # import json
     # data = json.loads(f.text)
     top_company_changed=True
-    return render_template('upload.html',result = "File Submitted")   
+    return render_template("upload.html",result="file submitted successfully")
 def show_image(bucket):
     s3_client = boto3.client('s3',region_name='ap-south-1')
     public_urls = []
     try:
         for item in s3_client.list_objects(Bucket=bucket)['Contents']:
             presigned_url = s3_client.generate_presigned_url('get_object', Params = {'Bucket': bucket, 'Key': item['Key']}, ExpiresIn = 100)
-            print(presigned_url)
-            public_urls.append(presigned_url)
+            public_urls.append(presigned_url)    
     except Exception as e:
-        pass
+        pass 
+    for item in s3_client.list_objects(Bucket=bucket)['Contents']:
+        print(item['Key'])    
     # print("[INFO] : The contents inside show_image = ", public_urls)
     return public_urls
 @app.route("/gif")
@@ -302,6 +299,7 @@ def processRequest(req):
     elif(intent=="NoNeedOfTopCompanies"):
         print("cat")
         top_company_changed=True
+        watch()
         #top_companies={}
         z=False
     elif(intent=="TimeToLeave"):
