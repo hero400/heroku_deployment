@@ -105,10 +105,11 @@ def company_list():
     print(len(contents))
     if len(contents)>0:
       f =requests.get(contents[0], allow_redirects=True)
+      #print(f.text)
       temp=f.text.split("\n")
       for x in temp:
-          if "," in x:
-              top_companies.add(x.split(",")[1])
+        top_companies.add(x)
+    #print(top_companies)          
     # import json
     # data = json.loads(f.text)
     top_company_changed=True
@@ -155,7 +156,7 @@ def show_image2(bucket):
               file_object=io.BytesIO(bytes_data)
               document=doc_to_text(file_object)
               #print(document)
-              document+="**********************"
+              #document+="**********************"
               resumes.append(document)
               # document = docx.Document(docx=file_object)
               # doc=""
@@ -284,14 +285,14 @@ def processRequest(req):
     elif (intent=="SeeOurTopCompanyList"):
         if top_company_changed:
             return {
-            "fulfillmentText":"{}+{}".format(top_companies,z),
+            "fulfillmentText":"{}".format(top_companies),
              "fulfillmentMessages": [
       {
         "platform": "ACTIONS_ON_GOOGLE",
         "simpleResponses": {
           "simpleResponses": [
             {
-              "textToSpeech":"{}+{}".format(top_companies,z)
+              "textToSpeech":"{}".format(top_companies)
             }
           ]
         }
@@ -309,7 +310,7 @@ def processRequest(req):
       {
         "text": {
           "text": [
-          "{}+{}".format(top_companies,z)
+          "{}".format(top_companies)
             
             ]
         }
@@ -317,14 +318,14 @@ def processRequest(req):
     ]}
         else:
             return {
-            "fulfillmentText":"{}+{}".format(companies,z),
+            "fulfillmentText":"{}".format(companies),
              "fulfillmentMessages": [
       {
         "platform": "ACTIONS_ON_GOOGLE",
         "simpleResponses": {
           "simpleResponses": [
             {
-              "textToSpeech":"{}+{}".format(companies,z)
+              "textToSpeech":"{}".format(companies)
             }
           ]
         }
@@ -342,7 +343,7 @@ def processRequest(req):
       {
         "text": {
           "text": [
-          "{}+{}".format(companies,z)
+          "{}".format(companies)
             
             ]
         }
