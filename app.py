@@ -14,6 +14,17 @@ import docx2txt
 import boto3,botocore
 import io
 import docx
+import re
+import spacy
+from spacy.matcher import Matcher
+import en_core_web_sm
+import time
+from PyPDF2 import PdfFileReader
+#Load a pre-trained model
+nlp = en_core_web_sm.load()
+# initialise match with a vocabulary
+matcher=Matcher(nlp.vocab)
+
 app = Flask(__name__)
 # app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 # app.config['SESSION_TYPE'] = 'redis'
@@ -134,51 +145,171 @@ def show_image(bucket):
     return public_urls
 @app.route("/resumes")
 def resume_list():
-     contents = show_image2(os.environ.get('S3_BUCKET'))
-       #print(f.text)
-       #print(resume_text)
-     return render_template("upload.html",result2=contents)  
+     contents,resume_name=show_image2(os.environ.get('S3_BUCKET'))
+     start=time.time()
+     final=[]
+     xx=pd.Series(contents)
+     for resume in xx:
+        final.append(extract_everything(resume))
+     final_dataframe=pd.DataFrame(final,index=resume_name)
+     print(f"{time.time()-start} seconds")    
+     return render_template("upload.html",result2=final)  
 def show_image2(bucket):
     # fs = obj.get()['Body'].read()
     # pdfFile = PdfFileReader(BytesIO(fs))
     s3_client = boto3.client('s3',region_name='ap-south-1')
     resumes= []
-    count=0
+    resume_name=[]
     try:
         for item in s3_client.list_objects(Bucket=bucket)['Contents']:
             s3 = boto3.resource('s3')
             text=item['Key']
             index=text.find(".")
             if text[index+1:]=="docx" or text[index+1:]=="doc":
-              count+=1
               obj = s3.Object(bucket,item['Key'])
               bytes_data= obj.get()['Body'].read()
               file_object=io.BytesIO(bytes_data)
               document=doc_to_text(file_object)
-              #print(document)
-              #document+="**********************"
               resumes.append(document)
-              # document = docx.Document(docx=file_object)
-              # doc=""
-              # for p in document.paragraphs:
-              #     doc+=p.text
-              #     print(p.text)
-              # doc+="*************************************\n"  
+              resume_name.append(item['Key'])
+            elif text[index+1:]=="pdf":
+              obj = s3.Object(bucket,item['Key'])
+              bytes_data=obj.get()["Body"].read()
+              #file_object=io.BytesIO(bytes_data)
+              pdfFile = PdfFileReader(io.BytesIO(bytes_data))
+              data=pdf_to_text_pypdf2(pdfFile)
+              text2=[line.replace('\t'," ") for line in data.split('\n') if line]
+              data=" ".join(text2) 
+              resumes.append(data)
+              resume_name.append(item['Key'])  
     except Exception as e:
         print("expection:"+str(e))
     # for item in s3_client.list_objects(Bucket=bucket)['Contents']:
     #     print(item['Key'])    
     # print("[INFO] : The contents inside show_image = ", public_urls)
-    print(count)
-    return resumes
+    return resumes,resume_name
+def pdf_to_text_pypdf2(pdfObject):
+    num_pages=pdfObject.numPages
+    current_page=0
+    text2=""
+    while current_page<num_pages:
+        #Get specific page
+        pdfPage=pdfObject.getPage(current_page)
+        #Get text of that page
+        text2=text2+pdfPage.extractText()
+            #next page
+        current_page+=1
+    return text2    
+def pdf_to_text_pdfminer(path):
+    with open(path,'rb') as pdf:
+        #iterate over all pages of pdf document
+        for page in PDFPage.get_pages(pdf,caching=True,check_extractable=True):
+            #create a resource manager
+            resource_manager=PDFResourceManager()
+            
+            #create a file handle
+            file_handle=StringIO()
+             #create a text converter object
+            converter=TextConverter(
+            resource_manager,
+                file_handle,
+                laparams=LAParams()
+            )
+            #creating a page interpeter
+            page_interpreter=PDFPageInterpreter(resource_manager,converter)
+            
+            #process current page
+            page_interpreter.process_page(page)
+            
+            #extract text
+            text=file_handle.getvalue()
+            yield text
+            
+            converter.close()
+
+def extract_name(resume_text):
+    nlp_text=nlp(resume_text)
+    
+    #First name and last name are always proper nouns
+    pattern=[{'POS':'PROPN'},{'POS':'PROPN'}]
+    
+    matcher.add('NAME',[pattern])
+    
+    matches=matcher(nlp_text)
+    
+    for match_id,start,end in matches:
+        span=nlp_text[start:end]
+        return span.text
+
+def extract_email(resume_text):
+    pattern=re.compile('[a-zA-z0-9\.\-\_]+@[a-zA-Z0-9.]+\.[a-zA-Z]+')
+    email=pattern.findall(resume_text)
+    if email:
+        return "".join(email[0])
+    return None   
+
+def extract_mobile_number(resume_text):
+    pattern=re.compile('[\+\(]*[1-9][0-9 .\-\(\)]{8,}[0-9]')
+    phone=pattern.findall(resume_text)
+    # phone is a list of numbers found in resume we need only the first one we find 
+    if phone:
+        return "".join(phone[0])
+    return None
+
 def doc_to_text(path):
     text=docx2txt.process(path)
     text2=[line.replace('\t'," ") for line in text.split('\n') if line]
-    return " ".join(text)           
-@app.route("/gif")
-def giff():
-  return str(top_companies)
-
+    return " ".join(text2)
+def extract_everything(resume_text):
+    #print(resume_text[:30])
+    output={'name':'','mobile number':'','email':'','education':'','skills':{},'skills_score':0,'universities':{},'university_score':0,'companies':set(),'company_score':0,'experience':0}
+    output['name']=extract_name(resume_text[:50])
+    output['mobile number']=extract_mobile_number(resume_text)
+    output['email']=extract_email(resume_text)
+   # print(output['name'])
+    # skills,sorted_list,filtered_tokens=extract_skills_2(resume_text)
+    # skills=return_set(skills)
+    # school_and_exp={}
+    # first,second ,third,fourth=sorted_list
+    # #print(sorted_list)
+    # school_and_exp[first[0]]=filtered_tokens[first[1]+1:second[1]]
+    # school_and_exp[second[0]]=filtered_tokens[second[1]+1:third[1]]
+    # school_and_exp[third[0]]=filtered_tokens[third[1]+1:fourth[1]]
+    # school_and_exp[fourth[0]]=filtered_tokens[fourth[1]:]
+    # skills_dict={'data visualisation':set(),'machine learning':set(),'bigdata/cloudcomputing':set(),'programming languages':set()
+    # ,'statistics':set(),'software development':set(),'SQL/databases':set(),'deep learning':set(),'other':set()}
+    # colleges_dict={'tier1':set(),'tier2':set(),'tier3':set()}
+    # output['education']=" ".join(school_and_exp['education'])
+    # experience=" ".join(school_and_exp['experience'])
+    # experience_skills,_,_=extract_skills_2(experience)
+    # experience_skills=return_set(experience_skills)
+    # #skills_final=experience_skills.intersection(skills)
+    # skills_final=skills.union(experience_skills)
+    # #df=pd.DataFrame.from_dict(add_skills(skills_final,skills_dict),orient='index')
+    # #df=df.transpose()
+    # output['skills']=add_skills(skills_final,skills_dict)
+    
+    # # get tokens for education and generate bigrams and trigrams
+    # school_and_exp['education']= [w for w in school_and_exp['education'] if w.isalpha()]
+    # #check(school_and_exp)
+    # education_tokens=school_and_exp['education']
+    # bigrams_trigrams = list(map(' '.join,nltk.everygrams(education_tokens,1,5)))
+    # bigrams_trigrams=sorted(bigrams_trigrams,key=len,reverse=True)
+    # university_dataframe=create_university()
+    # #print(university_dataframe.head(15))
+    # output['universities']=add_university(bigrams_trigrams,colleges_dict,university_dataframe)
+    # #print(university_dataframe.head(15))
+    # #check2(output['universities'])
+    # experience_tokens=school_and_exp['experience']
+    # #print(experience_tokens)
+    # bigrams_trigrams = list(map(' '.join,nltk.everygrams(experience_tokens,1,3)))
+    # bigrams_trigrams=sorted(bigrams_trigrams,key=len,reverse=True)
+    # company_set=return_set(add_company(bigrams_trigrams,skills_final))
+    # output['companies']=company_set
+    # final_companies=[company for company in company_set if company in top_companies]
+    # output['experience per company'],output['experience']=get_experience2(experience,final_companies)
+    # output['skills_score'],output['university_score'],output['company_score'],output['score']=get_score(output)
+    return output               
 # @app.route("/submit_form/", methods = ["POST"])
 # def submit_form():
 
