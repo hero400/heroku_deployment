@@ -742,10 +742,10 @@ def extract_everything(resume_text):
 @app.route('/webhook', methods=['GET','POST'])
 @cross_origin()
 def webhook():
-    global top_company_changed
-    global top_companies
-    global z
-    global webpage_change
+    # global top_company_changed
+    # global top_companies
+    # global z
+    # global webpage_change
     req = request.get_json(silent=True, force=True)
     #print("Request:")
     #print(json.dumps(req, indent=4))
