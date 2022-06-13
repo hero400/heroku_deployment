@@ -42,7 +42,7 @@ all_companies={'aobc', 'kurt geiger', 'jimmy johns', 'frank pr', 'arena pharmace
 # app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 # app.config['SESSION_TYPE'] = 'redis'
 # app.config['SESSION_REDIS'] = redis.from_url('redis://127.0.0.1:6379')
-# # Configure session to use filesystem
+# # Configure session to use filesysteme
 # app.config["SESSION_PERMANENT"] = False
 # app.config["SESSION_TYPE"] = "filesystem"
 # app.config['top_company_changed']=False
@@ -122,19 +122,22 @@ def account():
     return render_template('collection.html')
   else:  
     return render_template('upload.html')
+@app.route("/dog")
+def sure():
+  return "bro"+str(top_companies)    
 @cross_origin()    
 @app.route('/sign-s3/')
 def sign_s3():
   # Load necessary information into the application
   S3_BUCKET = os.environ.get('S3_BUCKET')
-
-  # Load required data from the request
+  # Load required data from the request or parameters
   file_name = request.args.get('file-name')
   file_type = request.args.get('file-type')
 
   # Initialise the S3 client
   s3 = boto3.client('s3',region_name='ap-south-1')
   # Generate and return the presigned URL
+  #presigned url is needed to add objects to s3
   presigned_post = s3.generate_presigned_post(
     Bucket = S3_BUCKET,
     Key = file_name,
@@ -149,23 +152,22 @@ def sign_s3():
     'data': presigned_post,
     'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
   })
-
 @app.route("/companies")       
 def company_list():
     global top_companies
     global top_company_changed
+    #get content of S3 bucket in the form of presigned url
     contents = show_image(os.environ.get('S3_BUCKET'))
     print(len(contents))
     if len(contents)>0:
+      #requests is used to convert object url into usable format
       f =requests.get(contents[0], allow_redirects=True)
-      #print(f.text)
       temp=f.text.split("\n")
       for x in temp:
         top_companies.add(x)
-    #print(top_companies)          
-    # import json
-    # data = json.loads(f.text)
     top_company_changed=True
+    #remove content from S3 bucket
+    remove_from_bucket()
     return render_template("upload.html",result="file submitted successfully")
 def show_image(bucket):
     s3_client = boto3.client('s3',region_name='ap-south-1')
@@ -174,28 +176,34 @@ def show_image(bucket):
         for item in s3_client.list_objects(Bucket=bucket)['Contents']:
             text=item['Key']
             index=text.find(".")
-            #print(text[index+1:])
             if text[index+1:]=="csv":
                 presigned_url = s3_client.generate_presigned_url('get_object', Params = {'Bucket': bucket, 'Key': item['Key']}, ExpiresIn = 100)
                 public_urls.append(presigned_url) 
 
     except Exception as e:
         print("expection:"+str(e))
-    # for item in s3_client.list_objects(Bucket=bucket)['Contents']:
-    #     print(item['Key'])    
-    # print("[INFO] : The contents inside show_image = ", public_urls)
     return public_urls
+def remove_from_bucket():
+    bucket=os.environ.get('S3_BUCKET')
+    s3_client = boto3.client('s3',region_name='ap-south-1')
+    for item in s3_client.list_objects(Bucket=bucket)['Contents']:
+        print(item["Key"])
+        s3_client.delete_object(Bucket=bucket, Key=item["Key"])
 @app.route("/resumes")
 def resume_list():
      global final_dataframe
+     #receive content from S3 bucket in form of text
      contents,resume_name=show_image2(os.environ.get('S3_BUCKET'))
+     #remove content from S3 bucket
+     remove_from_bucket()
      start=time.time()
      final=[]
      xx=pd.Series(contents)
      for resume in xx:
         final.append(extract_everything(resume))
      final_dataframe=pd.DataFrame(final,index=resume_name)
-     print(f"{time.time()-start} seconds")    
+     print(f"{time.time()-start} seconds")
+     #make_response used to download files to local machine    
      resp = make_response(final_dataframe.to_csv())
      resp.headers["Content-Disposition"] = "attachment; filename=parsed_resumes.csv"
      return resp
@@ -207,6 +215,7 @@ def show_image2(bucket):
     resumes= []
     resume_name=[]
     try:
+        #instead of presigned url converted directly into text
         for item in s3_client.list_objects(Bucket=bucket)['Contents']:
             s3 = boto3.resource('s3')
             text=item['Key']
@@ -214,6 +223,7 @@ def show_image2(bucket):
             if text[index+1:]=="docx" or text[index+1:]=="doc":
                 obj = s3.Object(bucket,item['Key'])
                 bytes_data= obj.get()['Body'].read()
+                # make a online stream of bytes data
                 file_object=io.BytesIO(bytes_data)
                 document=doc_to_text(file_object)
                 resumes.append(document)
@@ -230,9 +240,6 @@ def show_image2(bucket):
                 resume_name.append(item['Key'])  
     except Exception as e:
         print("expection:"+str(e))
-    # for item in s3_client.list_objects(Bucket=bucket)['Contents']:
-    #     print(item['Key'])    
-    # print("[INFO] : The contents inside show_image = ", public_urls)
     return resumes,resume_name
 def pdf_to_text_pypdf2(pdfObject):
     num_pages=pdfObject.numPages
@@ -747,8 +754,6 @@ def webhook():
     # global z
     # global webpage_change
     req = request.get_json(silent=True, force=True)
-    #print("Request:")
-    #print(json.dumps(req, indent=4))
     res= processRequest(req)
     res = json.dumps(res, indent=4)
     #print(res)
