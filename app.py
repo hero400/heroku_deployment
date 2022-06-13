@@ -115,12 +115,13 @@ z=True
 #       df=pd.read_csv(f.filename)
 
 #       return 'file uploaded successfully'
-def check_function():
-  print("why not")
-  return render_template('collection.html')
+webpage_change=False
 @app.route("/")
 def account():
-    return render_template('upload.html')
+    if webpage_change:
+      return render_template('collection.html')
+    else:  
+      return render_template('upload.html')
 @cross_origin()    
 @app.route('/sign-s3/')
 def sign_s3():
@@ -738,14 +739,13 @@ def extract_everything(resume_text):
 
 # geting and sending response to dialogflow
 
-
-
-@app.route('/webhook', methods=['GET','POST'])                                                #GET
+@app.route('/webhook', methods=['GET','POST'])
 @cross_origin()
 def webhook():
     global top_company_changed
     global top_companies
     global z
+    global webpage_change
     req = request.get_json(silent=True, force=True)
     #print("Request:")
     #print(json.dumps(req, indent=4))
@@ -868,7 +868,7 @@ def processRequest(req):
         print("cat")
         top_company_changed=True
         #top_companies={}
-        check_function()
+        webpage_change=True
         z=False
     elif(intent=="TimeToLeave"):
         z=True
