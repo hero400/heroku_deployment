@@ -118,10 +118,10 @@ z=True
 webpage_change=False
 @app.route("/")
 def account():
-    if webpage_change:
-      return render_template('collection.html')
-    else:  
-      return render_template('upload.html')
+  if webpage_change:
+    return render_template('collection.html')
+  else:  
+    return render_template('upload.html')
 @cross_origin()    
 @app.route('/sign-s3/')
 def sign_s3():
@@ -762,6 +762,7 @@ def processRequest(req):
     global top_company_changed
     global top_companies
     global z
+    global webpage_change
     #sessionID=req.get('responseId')
     result = req.get("queryResult")
     #user_says=result.get("queryText")
