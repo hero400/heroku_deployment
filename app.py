@@ -1,5 +1,6 @@
 # This Python file uses the following encoding: utf-8
 from flask import Flask, render_template, request
+from flask import send_file
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import  FileStorage
 import numpy as np
@@ -114,9 +115,9 @@ z=True
 #       df=pd.read_csv(f.filename)
 
 #       return 'file uploaded successfully'
-def watch():
-  print("ok bro")
-  return url_for('giff')
+def check_function():
+  print("why not")
+  return render_template('collection.html')
 @app.route("/")
 def account():
     return render_template('upload.html')
@@ -194,9 +195,10 @@ def resume_list():
         final.append(extract_everything(resume))
      final_dataframe=pd.DataFrame(final,index=resume_name)
      print(f"{time.time()-start} seconds")    
-     file_name="sure.xlsx"
-     final_dataframe.to_excel(file_name)
-     return render_template("collection.html",result2=final_dataframe)  
+     resp = make_response(final_dataframe.to_csv())
+     resp.headers["Content-Disposition"] = "attachment; filename=parsed_resumes.csv"
+     return resp
+     #return render_template("collection.html",result2=final_dataframe)  
 def show_image2(bucket):
     # fs = obj.get()['Body'].read()
     # pdfFile = PdfFileReader(BytesIO(fs))
@@ -866,6 +868,7 @@ def processRequest(req):
         print("cat")
         top_company_changed=True
         #top_companies={}
+        check_function()
         z=False
     elif(intent=="TimeToLeave"):
         z=True
