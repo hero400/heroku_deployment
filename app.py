@@ -124,7 +124,7 @@ def account():
     return render_template('upload.html')
 @app.route("/dog")
 def sure():
-  return "bro"+str(top_companies)    
+  return "bro"+str(webpage_change)    
 @cross_origin()    
 @app.route('/sign-s3/')
 def sign_s3():
