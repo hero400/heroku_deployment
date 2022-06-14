@@ -874,7 +874,6 @@ def processRequest(req):
         print("cat")
         top_company_changed=True
         #top_companies={}
-        webpage_change=True
         z=False
     elif(intent=="TimeToLeave"):
         z=True
@@ -882,7 +881,10 @@ def processRequest(req):
         return 
         {
         "fulfillmentText":"bye"
-        } 
+        }
+    elif (intent=="Move ahead - custom"):
+        print("Yap working now call new webpage")  
+        webpage_change=True   
     elif (intent=="AddOwnCompanies"):
           z=False
           #return redirect(url_for('account'))
