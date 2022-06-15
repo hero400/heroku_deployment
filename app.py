@@ -118,10 +118,7 @@ z=True
 webpage_change=False
 @app.route("/")
 def account():
-  if webpage_change:
-    return render_template('collection.html')
-  else:  
-    return render_template('upload.html')
+  return render_template("upload.html")
 @app.route("/dog")
 def sure():
   return "bro"+str(webpage_change)    
@@ -187,7 +184,6 @@ def remove_from_bucket():
     bucket=os.environ.get('S3_BUCKET')
     s3_client = boto3.client('s3',region_name='ap-south-1')
     for item in s3_client.list_objects(Bucket=bucket)['Contents']:
-        print(item["Key"])
         s3_client.delete_object(Bucket=bucket, Key=item["Key"])
 @app.route("/resumes")
 def resume_list():
@@ -207,7 +203,7 @@ def resume_list():
      resp = make_response(final_dataframe.to_csv())
      resp.headers["Content-Disposition"] = "attachment; filename=parsed_resumes.csv"
      return resp
-     #return render_template("collection.html",result2=final_dataframe)  
+     #return render_template("collection.html",result2=final_dataframe)       
 def show_image2(bucket):
     # fs = obj.get()['Body'].read()
     # pdfFile = PdfFileReader(BytesIO(fs))
@@ -219,7 +215,7 @@ def show_image2(bucket):
         for item in s3_client.list_objects(Bucket=bucket)['Contents']:
             s3 = boto3.resource('s3')
             text=item['Key']
-            index=text.find(".")
+            index=text.rfind(".")
             if text[index+1:]=="docx" or text[index+1:]=="doc":
                 obj = s3.Object(bucket,item['Key'])
                 bytes_data= obj.get()['Body'].read()
@@ -234,13 +230,43 @@ def show_image2(bucket):
                 #file_object=io.BytesIO(bytes_data)
                 pdfFile = PdfFileReader(io.BytesIO(bytes_data))
                 data=pdf_to_text_pypdf2(pdfFile)
-                text2=[line.replace('\t'," ") for line in data.split('\n') if line]
+                text2=[line.replace('\t',"") for line in data.split('\n') if line]
                 data=" ".join(text2) 
                 resumes.append(data)
                 resume_name.append(item['Key'])  
     except Exception as e:
         print("expection:"+str(e))
     return resumes,resume_name
+final_selected=pd.DataFrame()        
+@app.route('/selected')    
+def selected_resume():
+    global final_selected
+    contents,resume_name=show_image2(os.environ.get('S3_BUCKET'))
+    print(resume_name)
+    remove_from_bucket()
+    start=time.time()
+    final=[]
+    xx=pd.Series(contents)
+    for resume in xx:
+      final.append(extract_everything(resume))
+    final_selected=pd.DataFrame(final,index=resume_name)
+    print(f"{time.time()-start} seconds")
+    return render_template("upload.html",result2="files submitted successfully")
+@app.route('/rejected')
+def rejected_resume():
+    contents,resume_name=show_image2(os.environ.get('S3_BUCKET'))
+    print(resume_name)
+    remove_from_bucket()
+    start=time.time()
+    final=[]
+    xx=pd.Series(contents)
+    for resume in xx:
+      final.append(extract_everything(resume))
+    final_rejected=pd.DataFrame(final,index=resume_name)
+    print(f"{time.time()-start} seconds")
+    print(final_selected.shape)
+    print(final_rejected.shape)
+    return render_template("upload.html",result3="files submitted successfully")
 def pdf_to_text_pypdf2(pdfObject):
     num_pages=pdfObject.numPages
     current_page=0
@@ -536,27 +562,41 @@ def update_company(m,m2,m5,m4,m6,experience,z,company_dict,stored,final_companie
     #print(m.start(),m.end())
     used=0
     for company in final_companies:
-        if z==1:
-            if (re.search(company,experience[:m.start()])):
-                final_companies.remove(company)
-                #new start point for next interval 
-                stored=m.end()
-                z+=1
-                months=get_months(m2.lower(),int(m5),m4.lower(),int(m6))
-                company_dict[company]=months
-                used+=1
-                break
+      if z==1:
+        if (re.search(company,experience[:m.start()])):
+          final_companies.remove(company)
+          #new start point for next interval 
+          stored=m.end()
+          z+=1
+          try:
+            #print(m2,m5,m4,m6)
+            months=get_months(m2.lower(),int(m5),m4.lower(),int(m6))
+            company_dict[company]=months
+            used+=1
+          except:
+            print("something is wrong1")
+          break
+                #print("ok something is wrong")    
         else:
-            if (re.search(company,experience[stored:m.start()])):
-                stored=m.end()
-                final_companies.remove(company)
-                months=get_months(m2.lower(),int(m5),m4.lower(),int(m6))
-                company_dict[company]=months
-                used+=1
-                break
+          if (re.search(company,experience[stored:m.start()])):
+            stored=m.end()
+            final_companies.remove(company)
+            try:
+              #print(m2,m5,m4,m6)
+              months=get_months(m2.lower(),int(m5),m4.lower(),int(m6))
+              company_dict[company]=months
+              used+=1
+            except:
+              print("something is wrong2")  
+            break
     if used==0:
+      try:
+        #print(m2,m5,m4,m6)
+        #print(m2.lower(),int(m5),m4.lower(),int(m6))
         months=get_months(m2.lower(),int(m5),m4.lower(),int(m6))
         company_dict['other']+=months
+      except:
+        print("something is wrong3")  
     return (company_dict,z,stored,final_companies)
 
 def get_experience2(experience,final_companies):
@@ -604,8 +644,6 @@ def get_experience2(experience,final_companies):
     for m in re.finditer(regex6,experience):
         company_dict,z,stored,final_companies=update_company(m,m[2],m[3],m[5],m[6],experience,z,company_dict,stored,final_companies)
     different_months=0
-    for k,v in company_dict.items():
-        total_months+=v
     match=re.findall(regex5,experience)
     if match:
         for m in match:
@@ -881,10 +919,7 @@ def processRequest(req):
         return 
         {
         "fulfillmentText":"bye"
-        }
-    elif (intent=="Move ahead - custom"):
-        print("Yap working now call new webpage")  
-        webpage_change=True   
+        }   
     elif (intent=="AddOwnCompanies"):
           z=False
           #return redirect(url_for('account'))
