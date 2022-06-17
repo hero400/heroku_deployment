@@ -24,6 +24,7 @@ nltk.download('stopwords')
 # nltk.download('tokenize')
 # nltk.download('corpus')
 # nltk.download('everygrams')
+
 import spacy
 from datetime import date
 import sys
@@ -31,6 +32,23 @@ from spacy.matcher import Matcher
 import en_core_web_sm
 import time
 from PyPDF2 import PdfFileReader
+import matplotlib.pyplot as plt
+
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn import svm
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.utils import resample
+from imblearn.over_sampling import SMOTE
+
 #Load a pre-trained model
 app = Flask(__name__)
 
@@ -266,7 +284,28 @@ def rejected_resume():
     print(f"{time.time()-start} seconds")
     print(final_selected.shape)
     print(final_rejected.shape)
-    return render_template("upload.html",result3="files submitted successfully")
+    final_rejected_all=final_rejected[['skills_score','university_score','company_score']]
+    final_rejected_all['identity']=0
+    final_selected_all=final_selected[['skills_score','university_score','company_score']]
+    final_selected_all['identity']=1
+    final_merged=pd.concat([final_selected_all,final_rejected_all], ignore_index=True)
+    print(final_merged.shape)
+    x=final_merged.iloc[:,:-1]
+    y=final_merged['identity'].values
+    sorted_list=visualise(x,y,final_merged)
+    print(sorted_list)
+    result3=f"{sorted_list[0][0]} with  an accuracy of {sorted_list[0][1][0]*100}% and hyper parameters:{sorted_list[0][1][1]}"
+    print(result3)
+    sm = SMOTE(sampling_strategy='minority', random_state=40)
+    # Fit the model to generate the data.
+    oversampled_X,oversampled_Y= sm.fit_resample(final_merged.iloc[:,:-1],final_merged['identity'])
+    print(oversampled_X.shape,oversampled_Y.shape)
+    final_merged_oversampled= pd.concat([pd.DataFrame(oversampled_X), pd.DataFrame(oversampled_Y)], axis=1)
+    sorted_list=visualise(oversampled_X,oversampled_Y,final_merged_oversampled)
+    print(sorted_list)
+    result3=f"{sorted_list[0][0]} with  an accuracy of {sorted_list[0][1][0]*100}% and hyper parameters:{sorted_list[0][1][1]}"
+    print(result3)
+    return render_template("upload.html",result3=result3)
 def pdf_to_text_pypdf2(pdfObject):
     num_pages=pdfObject.numPages
     current_page=0
@@ -736,10 +775,103 @@ def extract_everything(resume_text):
     bigrams_trigrams=sorted(bigrams_trigrams,key=len,reverse=True)
     company_set=return_set(add_company(bigrams_trigrams,skills_final))
     output['companies']=company_set
-    final_companies=[company for company in company_set if company in top_companies]
+    #final_companies=[company for company in company_set if company in top_companies]
+    final_companies=output['companies']
     output['experience per company'],output['experience']=get_experience2(experience,final_companies)
     output['skills_score'],output['university_score'],output['company_score'],output['score']=get_score(output)
-    return output               
+    return output
+
+def visualise(x,y,df):
+    algorithm_dict={'logistic_regression':[],'svm':[],'decision_tree':[],'random_forest':[],'knn':[]}
+    lg=LogisticRegression()
+    train_model(lg,df,"logistic_regression",algorithm_dict,dict())
+    #print("*"*100)
+##############################################################################
+                                #SVM
+    x=df.iloc[:,:-1]
+    y=df['identity'].values
+    params=[
+    {
+    'kernel':['linear','rbf','poly','sigmoid'],
+    'C':[0.1,0.2,0.5,1.0,2.0,5.0,8.0,10.0,12.0]    
+    }
+    ]
+    svc=svm.SVC()
+    gs=GridSearchCV(estimator=svm.SVC(),param_grid=params,scoring="accuracy",cv=5,n_jobs=-1)
+    gs.fit(x,y)
+    #print(f"SVM best paramters:{gs.best_params_}")
+    #print(f"SVM Accuracy:{gs.best_score_}")
+    svc=svm.SVC(C=gs.best_params_['C'],kernel=gs.best_params_['kernel'])
+    train_model(svc,df,"svm",algorithm_dict,{'C':gs.best_params_['C'],'kernel':gs.best_params_['kernel']})
+    #print("*"*100)
+##############################################################################
+                                #Decision Tree
+    ra=np.arange(1,11)
+    ans=[]
+    for i in ra:
+        tree=DecisionTreeClassifier(max_depth=i)
+        score=cross_val_score(tree,x,y,cv=5,scoring='accuracy').mean()
+        ans.append(score)
+    tree=DecisionTreeClassifier(max_depth=np.argmax(ans)+1)
+    train_model(tree,df,"decision_tree",algorithm_dict,{'max_depth':np.argmax(ans)+1})
+    #print("*"*100)
+##############################################################################
+                        #Random Forest
+    params=[
+    {
+    'n_estimators':[10,20,30,40,50,60,70,80,90,100],
+    'max_depth':[1,2,3,4,5,6,7,8,9,10]
+    }    
+    ]
+    gs=GridSearchCV(estimator=RandomForestClassifier(),param_grid=params,scoring="accuracy",cv=5,n_jobs=-1)
+    gs.fit(x,y)
+    rf=RandomForestClassifier(n_estimators=gs.best_params_['n_estimators'],max_depth=gs.best_params_['max_depth'])
+    train_model(rf,df,"random_forest",algorithm_dict,{'n_estimators':gs.best_params_['n_estimators'],'max_depth':gs.best_params_['max_depth']})
+    #print("*"*100)
+###############################################################################    
+                        #KNN
+    ra=np.arange(1,5)
+    ans=[]
+    for i in ra:
+        knn=KNeighborsClassifier(n_neighbors=i)
+        score=cross_val_score(knn,x,y,scoring="accuracy",cv=5).mean()
+        ans.append(score)
+    knn=KNeighborsClassifier(n_neighbors=np.argmax(ans)+1)
+    train_model(knn,df,"knn",algorithm_dict,{"n_neighbors":np.argmax(ans)+1})
+    sorted_list=sorted(algorithm_dict.items(), key=lambda item: item[1][0],reverse=True)
+    return sorted_list
+##########################################################################        
+def train_model(model,df,name,algorithm_dict,hyper_parameters):
+    train, test = train_test_split(df,test_size = 0.3, stratify=df.identity,random_state=13)
+    x=train.iloc[:,:-1]
+    y=train['identity'].values
+    model.fit(x,y)
+    if name=="Decison Tree" and len(df.columns)>2:
+        pass
+        #X=df[['skills_score','university_score','company_score']]
+        #plot_feature_importance(model,len(df.columns),X)
+   #print(train.shape,test.shape)
+    pred=model.predict(test.iloc[:,:-1])
+    algorithm_dict[name].append(model.score(test.iloc[:,:-1],test['identity'].values))
+    algorithm_dict[name].append(hyper_parameters)
+    #tn, fp, fn, tp = confusion_matrix(test['identity'],pred).ravel()
+    #print('True negatives: ', tn, '\nFalse positives: ', fp, '\nFalse negatives: ', fn, '\nTrue Positives: ', tp)
+    #print(classification_report(test['identity'], pred))
+    if len(df.columns)==2:
+        x=[[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],
+          [21],[22],[23],[24],[25],[26],[27],[28],[29],[30],[31],[32],[33],[34],[35],[36],[37],[38],[39],[40],[41],[42]]
+        g=model.predict(x)
+        #print(g)
+        #print(f"cut off score with {name}: {np.where(g==1)[0][0]}")
+    else:
+        x=[[13,5,0],[7,5,7]]
+        g=model.predict(x)
+        #print(g)
+###############################################################################
+def plot_feature_importance(model,n,X):
+    (pd.Series(model.feature_importances_, index=X.columns)
+   .nlargest(4)
+   .plot(kind='barh'))                   
 # @app.route("/submit_form/", methods = ["POST"])
 # def submit_form():
 
