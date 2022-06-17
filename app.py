@@ -234,6 +234,7 @@ def show_image2(bucket):
             s3 = boto3.resource('s3')
             text=item['Key']
             index=text.rfind(".")
+            print(item['Key'])
             if text[index+1:]=="docx" or text[index+1:]=="doc":
                 obj = s3.Object(bucket,item['Key'])
                 bytes_data= obj.get()['Body'].read()
