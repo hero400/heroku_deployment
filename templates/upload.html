@@ -1,0 +1,197 @@
+<!-- <html>
+   <body>
+      <form  method = "POST" 
+         enctype = "multipart/form-data">
+         <input type = "file" name = "file" />
+         <input type = "submit"/>
+      </form>   
+     <script type="text/javascript">
+    (function(d, m){
+        var kommunicateSettings = 
+            {"appId":"3660bb56cadbb0a4cbd312baa880e45a6","popupWidget":true,"automaticChatOpenOnNavigation":true};
+        var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
+        s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
+        var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
+        window.kommunicate = m; m._globals = kommunicateSettings;
+    })(document, window.kommunicate || {});
+/* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
+</script> 
+   </body>
+</html> -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask App - Output data on same page after form submit</title>
+</head>
+<body>
+
+   <!--  <form  method=post enctype=multipart/form-data>
+    <p><input type="file" name="file" >
+    <input type="submit" value="Upload" id="search_form_input">
+    </form> -->
+<input type="file" id="file_input"/>
+<p id="status">Please select a CSV file with company names</p>
+  <!-- <input type="submit"value="submit",id="submit_id"> -->
+<!-- <button onclick="dog()">Submit</button>--> 
+<button type="button" onclick="window.location.href='{{ url_for( 'company_list') }}';">submit</button>
+<h1>{{result}}</h1>   
+<br>
+<hr>
+<input type="file" id="file_input2" multiple="multiple"/>
+<p id="status">Please upload resume files</p>
+<button type="button" onclick="window.location.href='{{ url_for( 'resume_list') }}';">submit</button>
+<!-- <h1>{{result2}}</h1> -->
+<br>
+<hr>  
+<input type="file" id="file_input3" multiple="multiple"/>
+<p id="status">Please upload selected resumes</p>
+<button type="button" onclick="window.location.href='{{ url_for( 'selected_resume') }}';">submit</button>
+<h1>{{result2}}</h1>   
+<br>
+<hr>  
+<input type="file" id="file_input4" multiple="multiple"/>
+<p id="status">Please upload Rejected resumes</p>
+<button type="button" onclick="window.location.href='{{ url_for( 'rejected_resume') }}';">submit</button>
+<h1>{{result3}}</h1> 
+<hr>
+<br>
+<input type="file" id="file_input5" multiple="multiple"/>
+<p id="status">Please upload resumes to be tested on model</p>
+<button type="button" onclick="window.location.href='{{ url_for( 'test_resumes') }}';">submit</button>  
+<h1>{{result4}}</h1>
+<!-- <h1>{{result2}}</h1> -->
+    <!-- <div id="morse" class="info">nothing received yet</div>
+ -->    <!-- <h3>{{ result }}</h3> -->
+    <!-- <h3>{{ file_path }}</h3>
+ -->     <script type="text/javascript">
+    (function(d, m){
+        var kommunicateSettings = 
+            {"appId":"3660bb56cadbb0a4cbd312baa880e45a6","popupWidget":true,"automaticChatOpenOnNavigation":true};
+        var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
+        s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
+        var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
+        window.kommunicate = m; m._globals = kommunicateSettings;
+    })(document, window.kommunicate || {});
+   (function() {
+  console.log("why");   
+  document.getElementById("file_input").onchange = function(){
+    var files = document.getElementById("file_input").files;
+    console.log("sure"+files.length)
+    var file = files[0];
+    console.log(file.type)
+    if(!file){
+      return alert("No file selected.");
+    }
+    getSignedRequest(file);
+  };
+})();
+(function() {  
+  document.getElementById("file_input2").onchange = function(){
+    var files = document.getElementById("file_input2").files;
+    for (let i = 0; i <files.length; i++)
+    { 
+        var file=files[i];
+        getSignedRequest(file);
+    }
+    //getSignedRequest(file);
+  };
+})();
+(function() { 
+  document.getElementById("file_input3").onchange = function(){
+    var files = document.getElementById("file_input3").files;
+    for (let i = 0; i <files.length; i++)
+    { 
+        var file=files[i];
+        getSignedRequest(file);
+    }
+    //getSignedRequest(file);
+  };
+})();
+(function() { 
+  document.getElementById("file_input4").onchange = function(){
+    var files = document.getElementById("file_input4").files;
+    for (let i = 0; i <files.length; i++)
+    { 
+        var file=files[i];
+        getSignedRequest(file);
+    }
+    //getSignedRequest(file);
+  };
+})();
+(function() { 
+  document.getElementById("file_input5").onchange = function(){
+    var files = document.getElementById("file_input5").files;
+    for (let i = 0; i <files.length; i++)
+    { 
+        var file=files[i];
+        getSignedRequest(file);
+    }
+    //getSignedRequest(file);
+  };
+})();
+//  (function() {
+//   document.getElementById("submit_id").onclick = function()
+//   {
+//    console.log("done");
+//    //const xhr = new XMLHttpRequest();
+//    return redirect(url_for("list"))
+//   };
+// })();
+// app.use(function(req, res, next) {
+//     res.header("Access-Control-Allow-Origin", '*');
+//     res.header("Access-Control-Allow-Credentials", true);
+//     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+//     res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
+//     next();
+// });
+// function getSignedRequest(file){
+//   var xhr = new XMLHttpRequest();
+//   xhr.open("GET", "/sign_s3?file_name="+file.name+"&file_type="+file.type);
+//   xhr.onreadystatechange = function(){
+//     if(xhr.readyState === 4){
+//       if(xhr.status === 200){
+//         var response = JSON.parse(xhr.responseText);
+//         uploadFile(file, response.data, response.url);
+//       }
+//       else{
+//         alert("Could not get signed URL.");
+//       }
+//     }
+//   };
+//   xhr.send();
+// }
+function getSignedRequest(file){
+   const xhr = new XMLHttpRequest();
+      //opens /sign-s3 route and also sends file name and type in parameters 
+      xhr.open('GET', `/sign-s3?file-name=${file.name}&file-type=${file.type}`);
+      xhr.onreadystatechange = () => {
+        if(xhr.readyState === 4){
+          if(xhr.status === 200){
+            //extract keys from JSON using parse 
+            const response = JSON.parse(xhr.responseText);
+            //console.log(response)
+            uploadFile(file, response.data, response.url);
+          }
+          else{
+            alert('Could not get signed URL.');
+          }
+        }
+      };
+      xhr.send();
+    }
+function uploadFile(file, s3Data, url){
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", s3Data.url);
+  var postData = new FormData();
+  for(key in s3Data.fields){
+    postData.append(key, s3Data.fields[key]);
+  }
+  postData.append('file', file);
+  xhr.send(postData);
+}
+/* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
+</script> 
+
+<!-- this is where is need my data -->
+
+</body>
