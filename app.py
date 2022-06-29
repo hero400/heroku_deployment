@@ -22,10 +22,10 @@ import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
 
-nltk.download('word_tokenize')
-nltk.download('tokenize')
-nltk.download('corpus')
-nltk.download('everygrams')
+#nltk.download('word_tokenize')
+#nltk.download('tokenize')
+#nltk.download('corpus')
+#nltk.download('everygrams')
 
 import spacy
 from datetime import date
