@@ -253,13 +253,13 @@ def rejected_resume():
     final_selected_all['identity']=1
     final_merged=pd.concat([final_selected_all,final_rejected_all], ignore_index=True)
     print(final_merged.shape)
-    x=final_merged.iloc[:,:-1]
-    y=final_merged['identity'].values
+    #x=final_merged.iloc[:,:-1]
+    #y=final_merged['identity'].values
     global sorted_list
-    sorted_list=visualise(x,y,final_merged)
-    print(sorted_list)
-    result3=f"{sorted_list[0][0]} with  an accuracy of {sorted_list[0][1][0]*100}% and hyper parameters:{sorted_list[0][1][1]}"
-    print(result3)
+    #sorted_list=visualise(x,y,final_merged)
+    #print(sorted_list)
+    #result3=f"{sorted_list[0][0]} with  an accuracy of {sorted_list[0][1][0]*100}% and hyper parameters:{sorted_list[0][1][1]}"
+    #print(result3)
     sm = SMOTE(sampling_strategy='minority', random_state=40)
     # Fit the model to generate the data.
     oversampled_X,oversampled_Y= sm.fit_resample(final_merged.iloc[:,:-1],final_merged['identity'])
