@@ -44,7 +44,6 @@ distro==1.7.0
 distro-info===1.1build1
 docx2txt==0.8
 ec2-hibinit-agent==1.0.0
-en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.3.0/en>
 entrypoints==0.4
 et-xmlfile==1.1.0
 executing==0.8.3
